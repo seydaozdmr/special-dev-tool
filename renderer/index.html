@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevTools</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/foldgutter.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/lint/lint.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/fold/xml-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/lint/lint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.17/addon/lint/json-lint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonlint/1.6.0/jsonlint.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dark-theme">
+
+  <!-- macOS titlebar -->
+  <div class="titlebar">
+    <div class="titlebar-drag"></div>
+    <span class="titlebar-title">DevTools</span>
+    <div class="titlebar-drag"></div>
+    <button class="history-titlebar-btn" id="history-toggle" title="Toggle history panel">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      History
+    </button>
+  </div>
+
+  <div class="app-layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <span>DevTools</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tool="json">
+          <span class="nav-icon">{ }</span><span class="nav-label">JSON Formatter</span>
+        </button>
+        <button class="nav-item" data-tool="xml">
+          <span class="nav-icon">&lt;/&gt;</span><span class="nav-label">XML Beautify</span>
+        </button>
+        <button class="nav-item" data-tool="html">
+          <span class="nav-icon">&amp;#</span><span class="nav-label">HTML Encoder</span>
+        </button>
+        <button class="nav-item" data-tool="diff">
+          <span class="nav-icon">≠</span><span class="nav-label">Text Diff</span>
+        </button>
+        <button class="nav-item" data-tool="regex">
+          <span class="nav-icon">.*</span><span class="nav-label">Regex Tester</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-theme" id="btn-theme">
+          <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <span class="theme-label"></span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ── Tool area ── -->
+    <div class="tool-area" id="tool-area">
+
+      <!-- ─── JSON Formatter ─── -->
+      <div class="tool-panel active" id="tool-json">
+        <div class="tab-bar">
+          <div class="tab-list" id="json-tablist"></div>
+          <button class="tab-add" data-tool="json" title="New tab">+</button>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" id="json-format">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            Format
+          </button>
+          <button class="btn" id="json-minify">Minify</button>
+          <button class="btn" id="json-validate">Validate</button>
+          <div class="tb-sep"></div>
+          <button class="btn" id="json-paste">Paste</button>
+          <button class="btn" id="json-copy">Copy Output</button>
+          <button class="btn btn-danger" id="json-clear">Clear</button>
+          <div class="tb-sep"></div>
+          <label class="tb-label">Indent:</label>
+          <select class="tb-select" id="json-indent">
+            <option value="2">2 spaces</option>
+            <option value="4">4 spaces</option>
+            <option value="tab">Tab</option>
+          </select>
+          <div class="tb-sep"></div>
+          <button class="btn btn-toggle" id="json-tree-toggle">Tree View</button>
+        </div>
+        <div class="split-pane" id="json-split">
+          <div class="pane">
+            <div class="pane-header">Input</div>
+            <div class="cm-wrap" id="json-input-wrap"><textarea id="json-input-raw"></textarea></div>
+          </div>
+          <div class="pane-resizer" id="json-resizer"></div>
+          <div class="pane">
+            <div class="pane-header">Output
+              <button class="copy-sm" id="json-copy-sm"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            </div>
+            <div class="cm-wrap" id="json-output-wrap"><textarea id="json-output-raw" readonly></textarea></div>
+            <div class="tree-view" id="json-tree" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span id="json-status-text" class="status-msg">Ready</span>
+          <span id="json-stats" class="status-stats"></span>
+        </div>
+      </div>
+
+      <!-- ─── XML Beautify ─── -->
+      <div class="tool-panel" id="tool-xml">
+        <div class="tab-bar">
+          <div class="tab-list" id="xml-tablist"></div>
+          <button class="tab-add" data-tool="xml" title="New tab">+</button>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" id="xml-beautify">Beautify</button>
+          <button class="btn" id="xml-minify">Minify</button>
+          <div class="tb-sep"></div>
+          <button class="btn" id="xml-paste">Paste</button>
+          <button class="btn" id="xml-copy">Copy Output</button>
+          <button class="btn btn-danger" id="xml-clear">Clear</button>
+          <div class="tb-sep"></div>
+          <label class="tb-label">Indent:</label>
+          <select class="tb-select" id="xml-indent">
+            <option value="2">2 spaces</option>
+            <option value="4">4 spaces</option>
+            <option value="tab">Tab</option>
+          </select>
+        </div>
+        <div class="split-pane" id="xml-split">
+          <div class="pane">
+            <div class="pane-header">Input</div>
+            <div class="cm-wrap" id="xml-input-wrap"><textarea id="xml-input-raw"></textarea></div>
+          </div>
+          <div class="pane-resizer" id="xml-resizer"></div>
+          <div class="pane">
+            <div class="pane-header">Output
+              <button class="copy-sm" id="xml-copy-sm"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            </div>
+            <div class="cm-wrap" id="xml-output-wrap"><textarea id="xml-output-raw" readonly></textarea></div>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span id="xml-status-text" class="status-msg">Ready</span>
+        </div>
+      </div>
+
+      <!-- ─── HTML Encoder ─── -->
+      <div class="tool-panel" id="tool-html">
+        <div class="tab-bar">
+          <div class="tab-list" id="html-tablist"></div>
+          <button class="tab-add" data-tool="html" title="New tab">+</button>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" id="html-encode">Encode HTML</button>
+          <button class="btn" id="html-decode">Decode HTML</button>
+          <div class="tb-sep"></div>
+          <button class="btn" id="html-paste">Paste</button>
+          <button class="btn" id="html-copy">Copy Output</button>
+          <button class="btn btn-danger" id="html-clear">Clear</button>
+          <div class="tb-sep"></div>
+          <label class="tb-label">Mode:</label>
+          <select class="tb-select" id="html-mode">
+            <option value="named">Named entities</option>
+            <option value="numeric">Numeric entities</option>
+          </select>
+        </div>
+        <div class="split-pane" id="html-split">
+          <div class="pane">
+            <div class="pane-header">Input</div>
+            <textarea class="plain-textarea" id="html-input" placeholder="Paste text or HTML..."></textarea>
+          </div>
+          <div class="pane-resizer" id="html-resizer"></div>
+          <div class="pane">
+            <div class="pane-header">Output
+              <button class="copy-sm" id="html-copy-sm"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+            </div>
+            <textarea class="plain-textarea" id="html-output" readonly placeholder="Result..."></textarea>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span id="html-status-text" class="status-msg">Ready</span>
+          <span id="html-stats" class="status-stats"></span>
+        </div>
+      </div>
+
+      <!-- ─── Text Diff ─── -->
+      <div class="tool-panel" id="tool-diff">
+        <div class="tab-bar">
+          <div class="tab-list" id="diff-tablist"></div>
+          <button class="tab-add" data-tool="diff" title="New tab">+</button>
+        </div>
+        <div class="toolbar">
+          <button class="btn btn-primary" id="diff-compare">Compare</button>
+          <button class="btn btn-danger" id="diff-clear">Clear</button>
+          <div class="tb-sep"></div>
+          <label class="tb-label">Mode:</label>
+          <select class="tb-select" id="diff-mode">
+            <option value="line">Line diff</option>
+            <option value="word">Word diff</option>
+            <option value="char">Char diff</option>
+          </select>
+          <div class="tb-sep"></div>
+          <span id="diff-stats" class="status-stats"></span>
+        </div>
+        <div class="diff-layout">
+          <div class="diff-inputs" id="diff-inputs">
+            <div class="pane">
+              <div class="pane-header">Original</div>
+              <textarea class="plain-textarea" id="diff-original" placeholder="Original text..."></textarea>
+            </div>
+            <div class="pane-resizer" id="diff-resizer"></div>
+            <div class="pane">
+              <div class="pane-header">Modified</div>
+              <textarea class="plain-textarea" id="diff-modified" placeholder="Modified text..."></textarea>
+            </div>
+          </div>
+          <div class="diff-result-area">
+            <div class="pane-header">
+              Diff Result
+              <span class="diff-legend">
+                <span class="legend-add">+ Added</span>
+                <span class="legend-remove">− Removed</span>
+              </span>
+            </div>
+            <div class="diff-output" id="diff-output">
+              <div class="empty-hint">Click Compare to see the diff</div>
+            </div>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span id="diff-status-text" class="status-msg">Ready</span>
+        </div>
+      </div>
+
+      <!-- ─── Regex Tester ─── -->
+      <div class="tool-panel" id="tool-regex">
+        <div class="tab-bar">
+          <div class="tab-list" id="regex-tablist"></div>
+          <button class="tab-add" data-tool="regex" title="New tab">+</button>
+        </div>
+        <div class="toolbar">
+          <span class="tb-label">Pattern:</span>
+          <span class="regex-slash">/</span>
+          <input type="text" id="regex-pattern" class="regex-pattern-input" placeholder="pattern" spellcheck="false" />
+          <span class="regex-slash">/</span>
+          <input type="text" id="regex-flags" class="regex-flags-input" value="g" spellcheck="false" />
+          <button class="btn btn-primary" id="regex-test" style="margin-left:8px;">Test</button>
+          <button class="btn btn-danger" id="regex-clear">Clear</button>
+          <div class="tb-sep"></div>
+          <span id="regex-error" class="regex-error-badge" style="display:none;"></span>
+        </div>
+        <div class="split-pane" id="regex-split">
+          <div class="pane">
+            <div class="pane-header">Test String</div>
+            <div class="regex-editor-wrap">
+              <div class="regex-hl-layer" id="regex-hl-layer" aria-hidden="true"></div>
+              <textarea class="plain-textarea regex-textarea" id="regex-input" placeholder="Enter text to test..." spellcheck="false"></textarea>
+            </div>
+          </div>
+          <div class="pane-resizer" id="regex-resizer"></div>
+          <div class="pane">
+            <div class="pane-header">Matches <span id="regex-match-count" class="match-count"></span></div>
+            <div class="regex-matches-panel" id="regex-matches">
+              <div class="empty-hint">Enter a pattern and click Test</div>
+            </div>
+          </div>
+        </div>
+        <div class="statusbar">
+          <span id="regex-status-text" class="status-msg">Ready</span>
+        </div>
+      </div>
+
+    </div><!-- /tool-area -->
+
+    <!-- ── History Panel ── -->
+    <aside class="history-panel" id="history-panel">
+      <div class="history-header">
+        <div class="history-header-left">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          History
+        </div>
+        <button class="history-clear-btn" id="history-clear-all" title="Clear all history">Clear</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="empty-hint" style="padding:20px 14px;">No history yet.<br>Operations will appear here.</div>
+      </div>
+    </aside>
+
+  </div><!-- /app-layout -->
+
+  <script src="app.js"></script>
+</body>
+</html>
