@@ -23,16 +23,19 @@ No internet required, no data leaves your machine.
 - Double-click a tab label to rename it
 - Add new tabs with the `+` button, close with `×`
 
-### 🕓 History Panel
+### 🕓 Persistent History Panel
 - Every operation (Format, Beautify, Encode, Compare, Test…) is automatically saved to history
+- History is **persisted to disk** via `electron-store` — survives app restarts
 - Click **History** in the title bar to open the panel
 - Restore any past operation into the current tab or **open it in a new tab**
 - Clear all history with one click
+- Stored at: `~/Library/Application Support/json-formatter/devtools-history.json`
 
 ### 🎨 UI
 - Dark and Light theme (persisted across sessions)
 - Draggable split panes — resize input/output panels freely
 - macOS native title bar with traffic light buttons
+- Custom app icon (generated via Electron canvas + `iconutil`)
 - Keyboard-friendly — focus stays in editors
 
 ---
@@ -66,9 +69,18 @@ npm run build
 ```
 
 The `.dmg` file will be generated in the `dist/` folder.  
-Supports both **Apple Silicon (arm64)** and **Intel (x64)**.
+Supports **Apple Silicon (arm64)**.
 
-> **Note:** To include a custom app icon, place an `icon.icns` file inside the `build/` directory before running the build command.
+> **First launch:** macOS may show a Gatekeeper warning since the app is unsigned.  
+> Right-click the app → **Open** to bypass it.
+
+### Regenerate App Icon
+
+```bash
+npx electron ./build/generate-icon.js
+```
+
+This renders the icon at all required sizes via Electron canvas and packages them into `build/icon.icns` using `iconutil`.
 
 ---
 
@@ -76,13 +88,16 @@ Supports both **Apple Silicon (arm64)** and **Intel (x64)**.
 
 ```
 special-dev-tool/
-├── main.js          # Electron main process — window, menus, IPC
-├── preload.js       # Context bridge (clipboard access)
+├── main.js              # Electron main process — window, menus, IPC, history store
+├── preload.js           # Context bridge (clipboard + history IPC)
 ├── renderer/
-│   ├── index.html   # App shell — sidebar, tool panels, history panel
-│   ├── style.css    # Full dark/light theme, layout, component styles
-│   └── app.js       # All tool logic, tab system, history manager
-├── build/           # App icon and electron-builder resources
+│   ├── index.html       # App shell — sidebar, tool panels, history panel
+│   ├── style.css        # Full dark/light theme, layout, component styles
+│   └── app.js           # All tool logic, tab system, history manager
+├── build/
+│   ├── generate-icon.js # Icon generator script (Electron canvas → ICNS)
+│   ├── icon.icns        # App icon (all retina sizes)
+│   └── icon.iconset/    # Individual PNG sizes (16px – 1024px)
 └── package.json
 ```
 
@@ -102,9 +117,12 @@ special-dev-tool/
 
 ## 🛠 Tech Stack
 
-- [Electron](https://www.electronjs.org/) 33
-- [CodeMirror 5](https://codemirror.net/5/) — JSON & XML editors with syntax highlighting, folding and linting
-- Vanilla HTML / CSS / JavaScript — no frontend framework
+| | |
+|---|---|
+| [Electron](https://www.electronjs.org/) 33 | Desktop shell |
+| [CodeMirror 5](https://codemirror.net/5/) | JSON & XML editors with syntax highlighting, folding and linting |
+| [electron-store](https://github.com/sindresorhus/electron-store) 8 | Persistent history storage |
+| Vanilla HTML / CSS / JS | UI — no frontend framework |
 
 ---
 
