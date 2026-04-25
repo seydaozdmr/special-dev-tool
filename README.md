@@ -107,10 +107,13 @@ special-dev-tool/
 
 | Action | Shortcut |
 |--------|----------|
-| New tab | `+` button in tab bar |
-| Close tab | `×` on tab |
+| New tab | `Cmd+T` |
+| Close current tab | `Cmd+W` |
+| Next tab | `Cmd+Shift+]` |
+| Previous tab | `Cmd+Shift+[` |
+| Switch to tool 1–5 | `Cmd+1` … `Cmd+5` |
+| Toggle history panel | `Cmd+Shift+H` |
 | Rename tab | Double-click tab label |
-| Toggle history | History button in title bar |
 | Toggle theme | Sidebar footer button |
 
 ---

@@ -387,17 +387,86 @@ document.querySelectorAll('.tab-add').forEach(btn => {
 /* ══════════════════════════════════════════
    Sidebar navigation
 ══════════════════════════════════════════ */
+const TOOLS = ['json', 'xml', 'html', 'diff', 'regex'];
+
+function switchTool(toolId) {
+  const prev = document.querySelector('.nav-item.active');
+  if (prev) saveTab(prev.dataset.tool);
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+  const btn = document.querySelector(`.nav-item[data-tool="${toolId}"]`);
+  if (btn) btn.classList.add('active');
+  const panel = $('tool-' + toolId);
+  if (panel) panel.classList.add('active');
+  setTimeout(() => { allCMs().forEach(cm => cm.refresh()); syncRegexHighlight(); }, 30);
+}
+
 document.querySelectorAll('.nav-item').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const prev = document.querySelector('.nav-item.active');
-    if (prev) saveTab(prev.dataset.tool);
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    const panel = $('tool-' + btn.dataset.tool);
-    if (panel) panel.classList.add('active');
-    setTimeout(() => { allCMs().forEach(cm => cm.refresh()); syncRegexHighlight(); }, 30);
-  });
+  btn.addEventListener('click', () => switchTool(btn.dataset.tool));
+});
+
+/* ══════════════════════════════════════════
+   Keyboard shortcuts
+══════════════════════════════════════════ */
+function activeTool() {
+  const btn = document.querySelector('.nav-item.active');
+  return btn ? btn.dataset.tool : 'json';
+}
+
+document.addEventListener('keydown', e => {
+  const cmd = e.metaKey || e.ctrlKey;
+  if (!cmd) return;
+
+  // Cmd+T — new tab
+  if (e.key === 't' && !e.shiftKey && !e.altKey) {
+    e.preventDefault();
+    addTab(activeTool());
+    return;
+  }
+
+  // Cmd+W — close current tab
+  if (e.key === 'w' && !e.shiftKey && !e.altKey) {
+    e.preventDefault();
+    const tool = activeTool();
+    closeTab(tool, tabStore[tool].activeId);
+    return;
+  }
+
+  // Cmd+Shift+] — next tab
+  if (e.key === ']' && e.shiftKey) {
+    e.preventDefault();
+    const tool = activeTool();
+    const store = tabStore[tool];
+    const idx = store.tabs.findIndex(t => t.id === store.activeId);
+    const next = store.tabs[(idx + 1) % store.tabs.length];
+    if (next.id !== store.activeId) { saveTab(tool); loadTab(tool, next.id); renderTabBar(tool); }
+    return;
+  }
+
+  // Cmd+Shift+[ — previous tab
+  if (e.key === '[' && e.shiftKey) {
+    e.preventDefault();
+    const tool = activeTool();
+    const store = tabStore[tool];
+    const idx = store.tabs.findIndex(t => t.id === store.activeId);
+    const prev = store.tabs[(idx - 1 + store.tabs.length) % store.tabs.length];
+    if (prev.id !== store.activeId) { saveTab(tool); loadTab(tool, prev.id); renderTabBar(tool); }
+    return;
+  }
+
+  // Cmd+1…5 — switch tool
+  if (!e.shiftKey && !e.altKey && e.key >= '1' && e.key <= '5') {
+    const tool = TOOLS[parseInt(e.key) - 1];
+    if (tool && tool !== activeTool()) { e.preventDefault(); switchTool(tool); }
+    return;
+  }
+
+  // Cmd+Shift+H — toggle history
+  if (e.key === 'h' && e.shiftKey) {
+    e.preventDefault();
+    historyToggleBtn.click();
+    return;
+  }
 });
 
 /* ══════════════════════════════════════════
