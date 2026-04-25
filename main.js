@@ -1,5 +1,11 @@
 const { app, BrowserWindow, Menu, ipcMain, clipboard, shell } = require('electron');
 const path = require('path');
+const Store = require('electron-store');
+
+const store = new Store({
+  name: 'devtools-history',
+  defaults: { history: [] }
+});
 
 let mainWindow;
 
@@ -96,6 +102,21 @@ ipcMain.handle('clipboard-write', async (event, text) => {
 
 ipcMain.handle('clipboard-read', async () => {
   return clipboard.readText();
+});
+
+// History persistence
+ipcMain.handle('history-load', () => {
+  return store.get('history', []);
+});
+
+ipcMain.handle('history-save', (event, entries) => {
+  store.set('history', entries);
+  return true;
+});
+
+ipcMain.handle('history-clear', () => {
+  store.set('history', []);
+  return true;
 });
 
 app.whenReady().then(() => {

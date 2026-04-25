@@ -9,7 +9,12 @@
     "build": "electron-builder --mac dmg",
     "build:dir": "electron-builder --mac dir"
   },
-  "keywords": ["json", "formatter", "electron", "developer-tools"],
+  "keywords": [
+    "json",
+    "formatter",
+    "electron",
+    "developer-tools"
+  ],
   "author": "seydaozdemir07@gmail.com",
   "license": "MIT",
   "devDependencies": {
@@ -25,15 +30,26 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ]
     },
     "dmg": {
       "title": "JSON Formatter",
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ]
     },
     "files": [
@@ -42,5 +58,8 @@
       "renderer/**/*",
       "build/**/*"
     ]
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
   }
 }

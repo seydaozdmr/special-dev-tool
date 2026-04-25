@@ -90,6 +90,9 @@ function makeResizer(resizerId, splitId, horizontal = false) {
 ══════════════════════════════════════════ */
 document.body.className = (localStorage.getItem('dt-theme') || 'dark') + '-theme';
 
+// Load persisted history after DOM is ready
+window.addEventListener('DOMContentLoaded', loadHistoryFromDisk);
+
 $('btn-theme').addEventListener('click', () => {
   const next = document.body.classList.contains('dark-theme') ? 'light' : 'dark';
   document.body.className = next + '-theme';
@@ -104,10 +107,29 @@ function allCMs() { return [jsonInputCM, jsonOutputCM, xmlInputCM, xmlOutputCM].
 ══════════════════════════════════════════ */
 let historyLog = [];
 
+/* ── Persist to electron-store via IPC ── */
+async function persistHistory() {
+  if (window.electronAPI?.history) {
+    // ts is a Date — serialize as ISO string
+    const serializable = historyLog.map(e => ({ ...e, ts: e.ts instanceof Date ? e.ts.toISOString() : e.ts }));
+    await window.electronAPI.history.save(serializable);
+  }
+}
+
+async function loadHistoryFromDisk() {
+  if (!window.electronAPI?.history) return;
+  try {
+    const saved = await window.electronAPI.history.load();
+    historyLog = (saved || []).map(e => ({ ...e, ts: new Date(e.ts) }));
+    renderHistoryList();
+  } catch {}
+}
+
 function addHistory(entry) {
   historyLog.unshift({ id: Date.now() + Math.random(), ts: new Date(), ...entry });
   if (historyLog.length > 150) historyLog.pop();
   renderHistoryList();
+  persistHistory();
 }
 
 function renderHistoryList() {
@@ -188,9 +210,10 @@ function restoreHistory(entry, inNewTab) {
   setTimeout(() => allCMs().forEach(cm => cm.refresh()), 30);
 }
 
-$('history-clear-all').addEventListener('click', () => {
+$('history-clear-all').addEventListener('click', async () => {
   historyLog = [];
   renderHistoryList();
+  if (window.electronAPI?.history) await window.electronAPI.history.clear();
 });
 
 /* ── History toggle ── */
